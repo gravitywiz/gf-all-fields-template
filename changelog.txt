@@ -1,0 +1,69 @@
+# Changelog
+
+## 0.13 | April 30th, 2025
+
+- Added function for getting original entry for use in custom templates.
+- Updated `:updated` modifier to work with multi-input fields (Name, Email, Address).
+- Added filter to customize template content.
+- Added support to handle meta modifier to display meta key values.
+- Fixed a fatal error with the snippet and Nested Forms.
+- Added `:updated` modifier for All Fields Template to display only updated fields.
+
+## 0.12 | March 1st, 2025
+
+- Added `gwaft_template_output` filter to customize template content.
+
+## 0.11 | November 8th, 2024
+
+- Added `:updated` modifier to show only fields that were most recently updated.
+
+## 0.10 | July 21st, 2023
+
+- Added support for using `:filter` with input IDs.
+- Fixed a conflict with GravityView.
+- Improved modifier regex to allow modifiers to contain underscores.
+
+## 0.9.16 | May 2nd, 2023
+
+- Fixed issue where `:nopricingfields` modifier applied to subsequent merge tags on the form.
+- Fixed regression that could cause a PHP fatal error if order summary shown via All Fields Template.
+
+## 0.9.15 | April 5th, 2022
+
+- Increased merge tag filter parameter number for better compatibility.
+
+## 0.9.14 | February 9th, 2022
+
+- Fixed issue where Signature field images would not show if using GF Signature 4.0 or newer.
+- Added support for excluding the Consent field description input.
+
+## 0.9.13 | January 19th, 2022
+
+- Added support for excluding the Consent field description input.
+
+## 0.9.12 | October 1st, 2021
+
+- Added `gwaft_template_paths` filter to allow adding custom template paths.
+- Added support for using the :exclude modifier with child fields in Nested Forms.
+
+## 0.9.11 | June 16th, 2021
+
+- Fixed issue where `nopricingfields` may still show order summary when other modifiers are used.
+- Added support for filtering "Order Summary" label.
+
+## 0.9.10 | June 14th, 2021
+
+- Fixed issue where "Order Summary" label would still appear when using `nopricingfields` modifier.
+
+## 0.9.9 | April 2nd, 2021
+
+- Added support for custom modifier values.
+- Added `gwaft_modifier_value` filter for dynamic field ID replacement.
+
+## 0.9.8 | November 9th, 2020
+
+- Added support for excluding specific inputs via :exclude modifier.
+
+## 0.9.7 | November 3rd, 2020
+
+- Added to Snippet Library
