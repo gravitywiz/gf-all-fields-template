@@ -91,6 +91,47 @@ class GW_All_Fields_Template {
 		add_filter( 'gform_pre_replace_merge_tags', array( $this, 'replace_merge_tags' ), 9, 7 );
 		add_filter( 'gform_merge_tag_filter', array( $this, 'all_fields_extra_options' ), 21, 6 );
 		add_action( 'gform_post_update_entry', array( $this, 'save_original_entry' ), 10, 2 );
+		add_action( 'gform_field_advanced_settings', array( $this, 'add_field_setting_exclude_from_all_fields_template' ), 10, 2 );
+		add_action( 'gform_editor_js', array( $this, 'output_editor_js_exclude_from_all_fields_template' ) );
+	}
+
+	public function add_field_setting_exclude_from_all_fields_template( $position, $form_id ) {
+
+		if ( $position !== 50 ) {
+			return;
+		}
+
+		?>
+		<li class="gwaft-exclude-from-all-fields-template field_setting">
+			<input type="checkbox" id="gwaft_exclude_from_all_fields_template" onclick="SetFieldProperty('gwaftExcludeFromAllFieldsTemplate', this.checked);" />
+			<label for="gwaft_exclude_from_all_fields_template" class="inline">
+				<?php esc_html_e( 'Exclude this field from All Fields Template', 'gf-all-fields-template' ); ?>
+			</label>
+		</li>
+		<?php
+	}
+
+	public function output_editor_js_exclude_from_all_fields_template() {
+		?>
+		<script type="text/javascript">
+			(function($) {
+				if ( window.fieldSettings ) {
+					for ( var type in fieldSettings ) {
+						if ( !Object.prototype.hasOwnProperty.call(fieldSettings, type) ) {
+							continue;
+						}
+						if ( fieldSettings[type].indexOf('.gwaft-exclude-from-all-fields-template') === -1 ) {
+							fieldSettings[type] += ', .gwaft-exclude-from-all-fields-template';
+						}
+					}
+				}
+
+				$(document).on('gform_load_field_settings', function(event, field) {
+					$('#gwaft_exclude_from_all_fields_template').prop('checked', !!field.gwaftExcludeFromAllFieldsTemplate);
+				});
+			})(jQuery);
+		</script>
+		<?php
 	}
 
 	/**
@@ -111,6 +152,11 @@ class GW_All_Fields_Template {
 		if ( ! is_a( $field, 'GF_Field' ) ) {
 			$field       = new GF_Field();
 			$field->type = $field;
+		}
+
+		// Allow fields to be excluded from {all_fields} output via field setting.
+		if ( $merge_tag === 'all_fields' && ! empty( $field->gwaftExcludeFromAllFieldsTemplate ) ) {
+			return false;
 		}
 
 		if ( $merge_tag !== 'all_fields' && $field->type === 'form' ) {
@@ -419,6 +465,10 @@ class GW_All_Fields_Template {
 		$display_product_summary = false;
 
 		foreach ( $form['fields'] as $field ) {
+
+			if ( $merge_tag === 'all_fields' && ! empty( $field->gwaftExcludeFromAllFieldsTemplate ) ) {
+				continue;
+			}
 
 			$field_value = '';
 			$field_label = $use_admin_label && ! empty( $field->adminLabel ) ? $field->adminLabel : esc_html( GFCommon::get_label( $field, 0, false, $use_admin_label ) );
