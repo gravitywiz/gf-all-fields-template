@@ -72,6 +72,7 @@ class GW_All_Fields_Template {
 
 	private static $instance = null;
 	private $original_entry  = array();
+	private $current_entry   = array();
 
 	public static function get_instance() {
 		if ( self::$instance == null ) {
@@ -210,7 +211,7 @@ class GW_All_Fields_Template {
 								}
 							}
 
-							$value = GFCommon::get_lead_field_display( $field, $filtered_values );
+							$value = $this->get_field_display_value( $field, $filtered_values, $this->current_entry );
 						}
 
 						$value = $this->get_all_fields_field_value( $field, $value );
@@ -239,7 +240,7 @@ class GW_All_Fields_Template {
 									$values[ $input_id ] = '';
 								}
 							}
-							$value = GFCommon::get_lead_field_display( $field, $values );
+							$value = $this->get_field_display_value( $field, $values, $this->current_entry );
 
 							// Consent form requires special treatment to remove the description HTML that's output into {all_fields}
 							// phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
@@ -293,6 +294,38 @@ class GW_All_Fields_Template {
 
 	public function get_original_entry() {
 		return $this->original_entry;
+	}
+
+	/**
+	 * Format a field value for the {all_fields} merge tag.
+	 *
+	 * GFCommon::get_lead_field_display() was deprecated in Gravity Forms 3.0. Use the field-level API when available,
+	 * while retaining compatibility with Gravity Forms versions that predate it.
+	 *
+	 * @param GF_Field    $field    The field being formatted.
+	 * @param mixed       $value    The raw field value.
+	 * @param array|mixed $entry    The current entry, when available.
+	 * @param bool        $use_text Whether choice text should be used instead of the choice value.
+	 * @param string      $format   The requested output format.
+	 *
+	 * @return mixed
+	 */
+	private function get_field_display_value( $field, $value, $entry = array(), $use_text = false, $format = 'html' ) {
+		$entry = is_array( $entry ) ? $entry : array();
+
+		if ( ! isset( $entry['currency'] ) ) {
+			$entry['currency'] = GFCommon::get_currency();
+		}
+
+		if ( method_exists( $field, 'get_value_all_fields_merge_tag' ) ) {
+			return $field->get_value_all_fields_merge_tag( $value, $entry, $use_text, $format );
+		}
+
+		if ( version_compare( GFForms::$version, '2.9.29', '>=' ) ) {
+			return GFCommon::get_lead_field_display( $field, $value, $entry, $use_text, $format, 'email' );
+		}
+
+		return GFCommon::get_lead_field_display( $field, $value, $entry['currency'], $use_text, $format, 'email' );
 	}
 
 	public function replace_merge_tags( $text, $form, $entry, $url_encode, $esc_html, $nl2br, $format ) {
@@ -409,7 +442,9 @@ class GW_All_Fields_Template {
 
 	public function get_submitted_fields( $form, $lead, $display_empty = false, $use_text = false, $format = 'html', $use_admin_label = false, $merge_tag = '', $modifiers = '' ) {
 
-		$items = array();
+		$items               = array();
+		$previous_entry      = $this->current_entry;
+		$this->current_entry = is_array( $lead ) ? $lead : array();
 
 		//$field_data = '';
 
@@ -478,11 +513,7 @@ class GW_All_Fields_Template {
 
 					$raw_field_value = RGFormsModel::get_lead_field_value( $lead, $field );
 
-					if ( version_compare( GFForms::$version, '2.9.29', '>=' ) ) {
-						$field_value = GFCommon::get_lead_field_display( $field, $raw_field_value, $lead, $use_text, $format, 'email' );
-					} else {
-						$field_value = GFCommon::get_lead_field_display( $field, $raw_field_value, rgar( $lead, 'currency' ), $use_text, $format, 'email' );
-					}
+					$field_value = $this->get_field_display_value( $field, $raw_field_value, $lead, $use_text, $format );
 
 					$display_field = true;
 					//depending on parameters, don't display adminOnly or hidden fields
@@ -503,7 +534,7 @@ class GW_All_Fields_Template {
 						break;
 					}
 
-					if ( ! empty( $field_value ) || strlen( $field_value ) > 0 || $display_empty ) {
+					if ( ! rgblank( $field_value ) || $display_empty ) {
 
 						switch ( $format ) {
 							case 'text':
@@ -552,6 +583,8 @@ class GW_All_Fields_Template {
 				);
 			}
 		}
+
+		$this->current_entry = $previous_entry;
 
 		return $items;
 	}
