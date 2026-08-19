@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.13.2 | August 19, 2026
+
+- Fixed issue where All Fields Template output could generate Gravity Forms 3.0 and PHP 8.1 deprecation notices.
+
 ## 0.13.1 | May 13, 2026
 
 - Improved compatibility with Gravity Forms 2.9.29+.
